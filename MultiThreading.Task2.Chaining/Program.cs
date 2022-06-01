@@ -7,6 +7,8 @@
  */
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MultiThreading.Task2.Chaining
 {
@@ -15,7 +17,7 @@ namespace MultiThreading.Task2.Chaining
         const int RandomAmount = 10;
         static readonly Random _random = new Random();
 
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             Console.WriteLine(".Net Mentoring Program. MultiThreading V1 ");
             Console.WriteLine("2.	Write a program, which creates a chain of four Tasks.");
@@ -25,9 +27,54 @@ namespace MultiThreading.Task2.Chaining
             Console.WriteLine("Fourth Task – calculates the average value. All this tasks should print the values to console");
             Console.WriteLine();
 
-            // feel free to add your code
+            var cts = new CancellationTokenSource();
+
+            var taskNumber = 0;
+
+            await Task.Run(() => RandomNumbersTask(++taskNumber), cts.Token)
+                .ContinueWith((t1) => MultiplicationTask(t1.Result, ++taskNumber), cts.Token)
+                .ContinueWith((t2) => SortingTask(t2.Result, ++taskNumber), cts.Token)
+                .ContinueWith((t3) => GetAverageTask(t3.Result, ++taskNumber), cts.Token);
 
             Console.ReadLine();
+        }
+
+        static int[] RandomNumbersTask(int taskNumber)
+        {
+            var result = GetRandomNumbers(RandomAmount);
+
+            OutputTaskResult(taskNumber, "Creates an array of 10 random integer", GetArrayString(result));
+
+            return result;
+        }
+
+        static int[] MultiplicationTask(int[] inputArr, int taskNumber)
+        {
+            var result = MultiplyWithRandom(inputArr, out int multiplicator);
+
+            var outputString = string.Concat($"Multiplicator = {multiplicator}\n", GetArrayString(inputArr));
+
+            OutputTaskResult(taskNumber, "Multiplies this array with another random integer", outputString);
+
+            return result;
+        }
+
+        static int[] SortingTask(int[] inputArr, int taskNumber)
+        {
+            var result = SortByAscending(inputArr);
+
+            OutputTaskResult(taskNumber, "Sorts this array by ascending",  GetArrayString(result));
+
+            return result;
+        }
+
+        static int GetAverageTask(int[] inputArr, int taskNumber)
+        {
+            var result = GetAverage(inputArr);
+
+            OutputTaskResult(taskNumber, "Calculates the average value", $"Average: {result}");
+
+            return result;
         }
 
         static int[] GetRandomNumbers(int amount)
@@ -42,9 +89,9 @@ namespace MultiThreading.Task2.Chaining
             return result;
         }
 
-        static int[] Multiply(int[] inputArr)
+        static int[] MultiplyWithRandom(int[] inputArr, out int multiplicator)
         {
-            var multiplicator = _random.Next();
+            multiplicator = _random.Next();
 
             for (int i = 0; i < inputArr.Length; i++)
             {
@@ -64,15 +111,16 @@ namespace MultiThreading.Task2.Chaining
             return (int)inputArr.Average();
         }
 
-        static void OuputTaskResult(int taskNumber, Action outputAction)
+        static void OutputTaskResult(int taskNumber, string description, string resultString)
         {
-            Console.WriteLine($"Task #{taskNumber}");
-            outputAction();
+            Console.WriteLine($"Task #{taskNumber} - {description}");
+            Console.WriteLine(resultString);
+            Console.WriteLine();
         }
 
-        static void OutputArray(int[] arr)
+        static string GetArrayString(int[] arr)
         {
-            Console.WriteLine(string.Concat("[ ", string.Join(", ", arr), " ]"));
+            return string.Concat("[ ", string.Join(", ", arr), " ]");
         }
     }
 }
