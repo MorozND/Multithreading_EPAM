@@ -40,8 +40,11 @@ namespace MultiThreading.Task1._100Tasks
             var tasks = new Task[TaskAmount];
             for (int i = 0; i < TaskAmount; i++)
             {
-                var taskNumber = i;
-                tasks[i] = Task.Run(() => TaskAction(taskNumber), cancellationToken);
+                tasks[i] = Task.Factory.StartNew(
+                    (object taskNumber) => TaskAction((int)taskNumber), 
+                    i, 
+                    cancellationToken
+                );
             }
 
             return tasks;
