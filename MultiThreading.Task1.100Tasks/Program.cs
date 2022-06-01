@@ -4,7 +4,6 @@
  * “Task #0 – {iteration number}”.
  */
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -33,18 +32,19 @@ namespace MultiThreading.Task1._100Tasks
             // Provide CancellationToken support to be able to gracefully close tasks if requested
             var cts = new CancellationTokenSource();
 
-            Task.WhenAll(GetTasks(cts.Token))
-                .GetAwaiter()
-                .GetResult();
+            Task.WaitAll(GetHundredTasks(cts.Token), cts.Token);
         }
 
-        static IEnumerable<Task> GetTasks(CancellationToken cancellationToken)
+        static Task[] GetHundredTasks(CancellationToken cancellationToken)
         {
+            var tasks = new Task[TaskAmount];
             for (int i = 0; i < TaskAmount; i++)
             {
                 var taskNumber = i;
-                yield return Task.Run(() => TaskAction(taskNumber), cancellationToken);
+                tasks[i] = Task.Run(() => TaskAction(taskNumber), cancellationToken);
             }
+
+            return tasks;
         }
 
         static void TaskAction(int taskNumber)
