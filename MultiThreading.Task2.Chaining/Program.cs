@@ -63,5 +63,16 @@ namespace MultiThreading.Task2.Chaining
         {
             return (int)inputArr.Average();
         }
+
+        static void OuputTaskResult(int taskNumber, Action outputAction)
+        {
+            Console.WriteLine($"Task #{taskNumber}");
+            outputAction();
+        }
+
+        static void OutputArray(int[] arr)
+        {
+            Console.WriteLine(string.Concat("[ ", string.Join(", ", arr), " ]"));
+        }
     }
 }
