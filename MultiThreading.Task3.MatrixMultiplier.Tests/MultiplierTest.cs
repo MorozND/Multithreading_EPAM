@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MultiThreading.Task3.MatrixMultiplier.Matrices;
 using MultiThreading.Task3.MatrixMultiplier.Multipliers;
@@ -8,6 +9,8 @@ namespace MultiThreading.Task3.MatrixMultiplier.Tests
     [TestClass]
     public class MultiplierTest
     {
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public void MultiplyMatrix3On3Test()
         {
@@ -18,8 +21,39 @@ namespace MultiThreading.Task3.MatrixMultiplier.Tests
         [TestMethod]
         public void ParallelEfficiencyTest()
         {
-            // todo: implement a test method to check the size of the matrix which makes parallel multiplication more effective than
-            // todo: the regular one
+            var matrixSize = 100;
+
+            var consequitiveMultiplier = new MatricesMultiplier();
+            var parallelMultiplier = new MatricesMultiplierParallel();
+
+            var sw = new Stopwatch();
+
+            while (matrixSize > 0)
+            {
+                var m1 = new Matrix(matrixSize, matrixSize, true);
+                var m2 = new Matrix(matrixSize, matrixSize, true);
+
+                sw.Restart();
+                consequitiveMultiplier.Multiply(m1, m2);
+                sw.Stop();
+                var consequitiveTime = sw.ElapsedTicks;
+
+                sw.Restart();
+                parallelMultiplier.Multiply(m1, m2);
+                sw.Stop();
+                var parallelTime = sw.ElapsedTicks;
+
+                TestContext.WriteLine(
+                    $"Matrices {matrixSize}x{matrixSize}: Consequitive = {consequitiveTime} ticks; Parallel = {parallelTime} ticks"
+                );
+
+                if (consequitiveTime < parallelTime) break;
+
+                matrixSize -= 5;
+            }
+
+            if (matrixSize == 0)
+                Assert.Inconclusive("Couldn't find a case where consequitive multiplication is faster than a prallel one");
         }
 
         #region private methods
