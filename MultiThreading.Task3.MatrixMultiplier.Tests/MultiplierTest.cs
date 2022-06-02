@@ -23,25 +23,9 @@ namespace MultiThreading.Task3.MatrixMultiplier.Tests
         {
             var matrixSize = 100;
 
-            var consequitiveMultiplier = new MatricesMultiplier();
-            var parallelMultiplier = new MatricesMultiplierParallel();
-
-            var sw = new Stopwatch();
-
             while (matrixSize > 0)
             {
-                var m1 = new Matrix(matrixSize, matrixSize, true);
-                var m2 = new Matrix(matrixSize, matrixSize, true);
-
-                sw.Restart();
-                consequitiveMultiplier.Multiply(m1, m2);
-                sw.Stop();
-                var consequitiveTime = sw.ElapsedTicks;
-
-                sw.Restart();
-                parallelMultiplier.Multiply(m1, m2);
-                sw.Stop();
-                var parallelTime = sw.ElapsedTicks;
+                CalculateMultiplicationTimes(matrixSize, out var consequitiveTime, out var parallelTime);
 
                 TestContext.WriteLine(
                     $"Matrices {matrixSize}x{matrixSize}: Consequitive = {consequitiveTime} ticks; Parallel = {parallelTime} ticks"
@@ -49,14 +33,39 @@ namespace MultiThreading.Task3.MatrixMultiplier.Tests
 
                 if (consequitiveTime < parallelTime) break;
 
-                matrixSize -= 5;
+                matrixSize = DecreaseMatrixSize(matrixSize);
             }
 
             if (matrixSize == 0)
-                Assert.Inconclusive("Couldn't find a case where consequitive multiplication is faster than a prallel one");
+                Assert.Inconclusive("Couldn't find a case where consequitive multiplication is faster than a parallel one");
         }
 
         #region private methods
+        void CalculateMultiplicationTimes(int matrixSize, out long consequitiveTime, out long parallelTime)
+        {
+            var m1 = new Matrix(matrixSize, matrixSize, true);
+            var m2 = new Matrix(matrixSize, matrixSize, true);
+
+            var sw = new Stopwatch();
+
+            sw.Start();
+            new MatricesMultiplier().Multiply(m1, m2);
+            sw.Stop();
+            consequitiveTime = sw.ElapsedTicks;
+
+            sw.Restart();
+            new MatricesMultiplierParallel().Multiply(m1, m2);
+            sw.Stop();
+            parallelTime = sw.ElapsedTicks;
+        }
+
+        private int DecreaseMatrixSize(int matrixSize)
+        {
+            return matrixSize > 10
+                ? matrixSize - 10
+                : matrixSize - 1;
+        }
+
 
         void TestMatrix3On3(IMatricesMultiplier matrixMultiplier)
         {
