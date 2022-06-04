@@ -10,11 +10,14 @@
  */
 
 using System;
+using System.Threading;
 
 namespace MultiThreading.Task4.Threads.Join
 {
     class Program
     {
+        const int MaxThreadsCount = 10;
+
         static void Main(string[] args)
         {
             Console.WriteLine("4.	Write a program which recursively creates 10 threads.");
@@ -29,6 +32,30 @@ namespace MultiThreading.Task4.Threads.Join
             // feel free to add your code
 
             Console.ReadLine();
+        }
+
+        static Thread CreateThread(int value)
+        {
+            if (value == 1)
+            {
+                return new Thread(DecrementAction);
+            }
+        }
+
+        static void DecrementAction(object value)
+        {
+            var intValue = (int)value;
+
+            var decrementedValue = --intValue; ;
+
+            Console.WriteLine($"Initial value = {intValue}. New Value = {decrementedValue}");
+
+            value = decrementedValue;
+
+            if (decrementedValue != 0)
+            {
+
+            }
         }
     }
 }
