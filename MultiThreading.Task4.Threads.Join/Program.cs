@@ -24,6 +24,8 @@ namespace MultiThreading.Task4.Threads.Join
     {
         const int MaxThreadsCount = 10;
 
+        static SemaphoreSlim _semaphoreSlim = new SemaphoreSlim(1);
+
         static void Main(string[] args)
         {
             Console.WriteLine("4.	Write a program which recursively creates 10 threads.");
@@ -35,17 +37,38 @@ namespace MultiThreading.Task4.Threads.Join
 
             Console.WriteLine();
 
+            PerformThreadJoinApproach();
+
+            Console.WriteLine();
+
+            PerformThreadPoolSemaphoreApproach();
+
+            Console.ReadLine();
+        }
+
+        static void PerformThreadJoinApproach()
+        {
             var threadState = new ThreadState
             {
                 ThreadNumber = 1,
                 Value = MaxThreadsCount
             };
 
-            Console.WriteLine("Recursive threads approcah:");
+            Console.WriteLine("Recursive threads approach:");
             var thread = RecursiveThread(threadState);
             thread.Join();
+        }
 
-            Console.ReadLine();
+        static void PerformThreadPoolSemaphoreApproach()
+        {
+            var threadState = new ThreadState
+            {
+                ThreadNumber = 1,
+                Value = MaxThreadsCount
+            };
+
+            Console.WriteLine("Recursive ThreadPool with Semaphore approach:");
+            RecursiveThreadPool(threadState);
         }
 
         static Thread RecursiveThread(object state)
@@ -54,7 +77,7 @@ namespace MultiThreading.Task4.Threads.Join
 
             threadState.ThreadNumber++;
 
-            if (threadState.ThreadNumber < MaxThreadsCount)
+            if (threadState.ThreadNumber <= MaxThreadsCount)
             {
                 var thread = RecursiveThread(threadState);
                 thread.Join();
@@ -63,6 +86,20 @@ namespace MultiThreading.Task4.Threads.Join
             var newThread = new Thread(DecrementStateValue);
             newThread.Start(threadState);
             return newThread;
+        }
+
+        static void RecursiveThreadPool(object state)
+        {
+            var threadState = state as ThreadState;
+
+            threadState.ThreadNumber++;
+
+            if (threadState.ThreadNumber <= MaxThreadsCount)
+            {
+                RecursiveThreadPool(threadState);
+            }
+
+            ThreadPool.QueueUserWorkItem(new WaitCallback(DecrementStateValueWithSemaphoreLock), state);
         }
 
         static void DecrementStateValue(object state)
@@ -75,6 +112,15 @@ namespace MultiThreading.Task4.Threads.Join
             Console.WriteLine($"Initial value = {originalValue}. New Value = {decrementedValue}");
 
             threadState.Value--;
+        }
+
+        static void DecrementStateValueWithSemaphoreLock(object state)
+        {
+            _semaphoreSlim.Wait();
+
+            DecrementStateValue(state);
+
+            _semaphoreSlim.Release(1);
         }
     }
 }
