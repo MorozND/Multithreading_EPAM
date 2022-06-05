@@ -35,7 +35,15 @@ namespace MultiThreading.Task4.Threads.Join
 
             Console.WriteLine();
 
-            // feel free to add your code
+            var threadState = new ThreadState
+            {
+                ThreadNumber = 1,
+                Value = MaxThreadsCount
+            };
+
+            Console.WriteLine("Recursive threads approcah:");
+            var thread = RecursiveThread(threadState);
+            thread.Join();
 
             Console.ReadLine();
         }
@@ -44,26 +52,29 @@ namespace MultiThreading.Task4.Threads.Join
         {
             var threadState = state as ThreadState;
 
+            threadState.ThreadNumber++;
+
             if (threadState.ThreadNumber < MaxThreadsCount)
             {
-                threadState.ThreadNumber--;
-                var thread = RecursiveThread(value, threadsCount);
-                thread.Start();
+                var thread = RecursiveThread(threadState);
                 thread.Join();
             }
 
-            return new Thread(DecrementValue);
+            var newThread = new Thread(DecrementStateValue);
+            newThread.Start(threadState);
+            return newThread;
         }
 
-        static void DecrementValue(object value)
+        static void DecrementStateValue(object state)
         {
-            var intValue = (int)value;
+            var threadState = state as ThreadState;
 
-            var decrementedValue = --intValue;
+            var originalValue = threadState.Value;
+            var decrementedValue = threadState.Value - 1;
 
-            Console.WriteLine($"Initial value = {intValue}. New Value = {decrementedValue}");
+            Console.WriteLine($"Initial value = {originalValue}. New Value = {decrementedValue}");
 
-            value = decrementedValue;
+            threadState.Value--;
         }
     }
 }
