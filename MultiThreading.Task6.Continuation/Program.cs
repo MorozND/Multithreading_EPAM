@@ -7,6 +7,7 @@
    Demonstrate the work of the each case with console utility.
 */
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MultiThreading.Task6.Continuation
@@ -24,7 +25,13 @@ namespace MultiThreading.Task6.Continuation
             Console.WriteLine();
 
             // feel free to add your code
-            var task = Task.Factory.StartNew(() => Console.WriteLine("Hello world"));
+
+            var _cts = new CancellationTokenSource();
+            var cancellationToken = _cts.Token;
+
+            var taskRunOption = GetTaskRunOption(args[0]);
+
+            var task = CreateTaskByOption(taskRunOption, cancellationToken);
 
             task.ContinueWith(
                 t => Console.WriteLine("Continuation for any result"),
@@ -32,12 +39,20 @@ namespace MultiThreading.Task6.Continuation
             );
 
             task.ContinueWith(
-                t => Console.WriteLine("Continuation on faulted"),
+                t =>
+                {
+                    Console.WriteLine("Continuation on faulted");
+                    Console.WriteLine($"Exception message: {t.Exception.Message}");
+                },
                 TaskContinuationOptions.OnlyOnFaulted
             );
 
             task.ContinueWith(
-                t => Console.WriteLine("Continuation on faulted and on the antecedent's thread"),
+                t =>
+                {
+                    Console.WriteLine("Continuation on faulted and on the antecedent's thread");
+                    Console.WriteLine($"Exception message: {t.Exception.Message}");
+                },
                 TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously
             );
 
@@ -46,9 +61,42 @@ namespace MultiThreading.Task6.Continuation
                 TaskContinuationOptions.OnlyOnCanceled | TaskContinuationOptions.LongRunning
             );
 
-            task.Wait();
+            if (taskRunOption == TaskRunOptions.Cancelled)
+            {
+                _cts.Cancel();
+            }
+            else
+            {
+                task.GetAwaiter().GetResult();
+            }
 
             Console.ReadLine();
+        }
+
+        static TaskRunOptions GetTaskRunOption(string argument)
+        {
+            if (!int.TryParse(argument, out var intValue))
+                throw new ArgumentException("Can't parse TaskRunOption user input");
+
+            if (!Enum.IsDefined(typeof(TaskRunOptions), intValue))
+                throw new ArgumentException("Invalid TaskRunOption provided");
+
+            return (TaskRunOptions)intValue;
+        }
+
+        static Task CreateTaskByOption(TaskRunOptions option, CancellationToken cancellationToken)
+        {
+            if (option == TaskRunOptions.Failed)
+                return Task.FromException(new Exception("Manual exception"));
+
+            return Task.Run(() =>
+                {
+                    Console.WriteLine("Regular task started");
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                }, 
+                cancellationToken
+            );
         }
     }
 }
