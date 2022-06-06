@@ -7,6 +7,7 @@
    Demonstrate the work of the each case with console utility.
 */
 using System;
+using System.Threading.Tasks;
 
 namespace MultiThreading.Task6.Continuation
 {
@@ -23,6 +24,29 @@ namespace MultiThreading.Task6.Continuation
             Console.WriteLine();
 
             // feel free to add your code
+            var task = Task.Factory.StartNew(() => Console.WriteLine("Hello world"));
+
+            task.ContinueWith(
+                t => Console.WriteLine("Continuation for any result"),
+                TaskContinuationOptions.None
+            );
+
+            task.ContinueWith(
+                t => Console.WriteLine("Continuation on faulted"),
+                TaskContinuationOptions.OnlyOnFaulted
+            );
+
+            task.ContinueWith(
+                t => Console.WriteLine("Continuation on faulted and on the antecedent's thread"),
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously
+            );
+
+            task.ContinueWith(
+                t => Console.WriteLine("Continuation on canceled and outside of the thread pool"),
+                TaskContinuationOptions.OnlyOnCanceled | TaskContinuationOptions.LongRunning
+            );
+
+            task.Wait();
 
             Console.ReadLine();
         }
