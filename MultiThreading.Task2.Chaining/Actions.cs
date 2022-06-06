@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace MultiThreading.Task2.Chaining
 {
@@ -35,7 +36,7 @@ namespace MultiThreading.Task2.Chaining
             return inputArr;
         }
 
-        public static string GetArrayString(int[] arr)
+        public static string GetArrayString(IEnumerable<int> arr)
         {
             return string.Concat("[ ", string.Join(", ", arr), " ]");
         }

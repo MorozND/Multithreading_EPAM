@@ -15,7 +15,6 @@ namespace MultiThreading.Task2.Chaining
     class Program
     {
         const int RandomAmount = 10;
-        static readonly Random _random = new Random();
 
         static async Task Main(string[] args)
         {
@@ -33,9 +32,9 @@ namespace MultiThreading.Task2.Chaining
             var taskNumber = 0;
 
             await Task.Run(() => taskActionFactory.RandomNumbersTask(++taskNumber, RandomAmount), cts.Token)
-                .ContinueWith((t1) => taskActionFactory.MultiplicationTask(t1.Result, ++taskNumber), cts.Token)
-                .ContinueWith((t2) => taskActionFactory.SortingTask(t2.Result, ++taskNumber), cts.Token)
-                .ContinueWith((t3) => taskActionFactory.GetAverageTask(t3.Result, ++taskNumber), cts.Token);
+                .ContinueWith(t1 => taskActionFactory.MultiplicationTask(t1.Result, ++taskNumber), cts.Token)
+                .ContinueWith(t2 => taskActionFactory.SortingTask(t2.Result, ++taskNumber), cts.Token)
+                .ContinueWith(t3 => taskActionFactory.GetAverageTask(t3.Result, ++taskNumber), cts.Token);
 
             Console.ReadLine();
         }
