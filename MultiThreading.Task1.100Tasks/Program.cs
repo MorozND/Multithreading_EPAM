@@ -41,7 +41,7 @@ namespace MultiThreading.Task1._100Tasks
             for (int i = 0; i < TaskAmount; i++)
             {
                 tasks[i] = Task.Factory.StartNew(
-                    (object taskNumber) => TaskAction((int)taskNumber), 
+                    taskNumber => TaskAction((int)taskNumber), 
                     i, 
                     cancellationToken
                 );
