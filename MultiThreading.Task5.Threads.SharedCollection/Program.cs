@@ -20,7 +20,7 @@ namespace MultiThreading.Task5.Threads.SharedCollection
 
         static readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-        static List<int> _collection = new List<int>();
+        static readonly List<int> _collection = new List<int>();
 
         static void Main(string[] args)
         {
