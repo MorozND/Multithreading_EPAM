@@ -7,6 +7,7 @@
    Demonstrate the work of the each case with console utility.
 */
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,6 +15,8 @@ namespace MultiThreading.Task6.Continuation
 {
     class Program
     {
+        static readonly CancellationTokenSource _cts = new CancellationTokenSource();
+
         static void Main(string[] args)
         {
             Console.WriteLine("Create a Task and attach continuations to it according to the following criteria:");
@@ -25,57 +28,25 @@ namespace MultiThreading.Task6.Continuation
             Console.WriteLine();
 
             // feel free to add your code
+            var taskRunOption = GetTaskRunOption(args);
+            var taskFactory = new CustomTaskFactory();
 
-            var _cts = new CancellationTokenSource();
-            var cancellationToken = _cts.Token;
+            var task = taskFactory.CreateTaskByOption(taskRunOption, _cts.Token);
 
-            var taskRunOption = GetTaskRunOption(args[0]);
-
-            var task = CreateTaskByOption(taskRunOption, cancellationToken);
-
-            task.ContinueWith(
-                t => Console.WriteLine("Continuation for any result"),
-                TaskContinuationOptions.None
-            );
-
-            task.ContinueWith(
-                t =>
-                {
-                    Console.WriteLine("Continuation on faulted");
-                    Console.WriteLine($"Exception message: {t.Exception.Message}");
-                },
-                TaskContinuationOptions.OnlyOnFaulted
-            );
-
-            task.ContinueWith(
-                t =>
-                {
-                    Console.WriteLine("Continuation on faulted and on the antecedent's thread");
-                    Console.WriteLine($"Exception message: {t.Exception.Message}");
-                },
-                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously
-            );
-
-            task.ContinueWith(
-                t => Console.WriteLine("Continuation on canceled and outside of the thread pool"),
-                TaskContinuationOptions.OnlyOnCanceled | TaskContinuationOptions.LongRunning
-            );
-
-            if (taskRunOption == TaskRunOptions.Cancelled)
-            {
-                _cts.Cancel();
-            }
-            else
-            {
-                task.GetAwaiter().GetResult();
-            }
+            ConfigureTaskContinuations(task);
+            ProcessTask(task, taskRunOption);
 
             Console.ReadLine();
         }
 
-        static TaskRunOptions GetTaskRunOption(string argument)
+        static TaskRunOptions GetTaskRunOption(string[] args)
         {
-            if (!int.TryParse(argument, out var intValue))
+            var optionArgument = args.FirstOrDefault();
+
+            if (optionArgument is null)
+                throw new ArgumentException("No TaskRunOption argument provided");
+
+            if (!int.TryParse(optionArgument, out var intValue))
                 throw new ArgumentException("Can't parse TaskRunOption user input");
 
             if (!Enum.IsDefined(typeof(TaskRunOptions), intValue))
@@ -84,19 +55,26 @@ namespace MultiThreading.Task6.Continuation
             return (TaskRunOptions)intValue;
         }
 
-        static Task CreateTaskByOption(TaskRunOptions option, CancellationToken cancellationToken)
+        static void ConfigureTaskContinuations(Task task)
         {
-            if (option == TaskRunOptions.Failed)
-                return Task.FromException(new Exception("Manual exception"));
+            TaskContinuationConfigurator.ConfigureAnyContinuation(task);
+            TaskContinuationConfigurator.ConfigureFaultedContinuation(task);
+            TaskContinuationConfigurator.ConfigureCancelledContinuation(task);
+        }
 
-            return Task.Run(() =>
-                {
-                    Console.WriteLine("Regular task started");
+        static void ProcessTask(Task task, TaskRunOptions taskRunOption)
+        {
+            task.Start();
 
-                    cancellationToken.ThrowIfCancellationRequested();
-                }, 
-                cancellationToken
-            );
+            if (taskRunOption == TaskRunOptions.Cancelled)
+            {
+                _cts.Cancel();
+            }
+
+            if (taskRunOption == TaskRunOptions.None)
+            {
+                task.GetAwaiter().GetResult();
+            }
         }
     }
 }
