@@ -75,6 +75,9 @@ namespace MultiThreading.Task4.Threads.Join
         {
             var threadState = state as ThreadState;
 
+            if (threadState is null)
+                throw new ArgumentNullException(nameof(state));
+
             threadState.ThreadNumber++;
 
             if (threadState.ThreadNumber <= MaxThreadsCount)
@@ -92,6 +95,9 @@ namespace MultiThreading.Task4.Threads.Join
         {
             var threadState = state as ThreadState;
 
+            if (threadState is null)
+                throw new ArgumentNullException(nameof(state));
+
             threadState.ThreadNumber++;
 
             if (threadState.ThreadNumber <= MaxThreadsCount)
@@ -99,19 +105,20 @@ namespace MultiThreading.Task4.Threads.Join
                 RecursiveThreadPool(threadState);
             }
 
-            ThreadPool.QueueUserWorkItem(new WaitCallback(DecrementStateValueWithSemaphoreLock), state);
+            ThreadPool.QueueUserWorkItem(DecrementStateValueWithSemaphoreLock, state);
         }
 
         static void DecrementStateValue(object state)
         {
             var threadState = state as ThreadState;
 
+            if (threadState is null)
+                throw new ArgumentNullException(nameof(state));
+
             var originalValue = threadState.Value;
-            var decrementedValue = threadState.Value - 1;
+            var decrementedValue = --threadState.Value;
 
             Console.WriteLine($"Initial value = {originalValue}. New Value = {decrementedValue}");
-
-            threadState.Value--;
         }
 
         static void DecrementStateValueWithSemaphoreLock(object state)
