@@ -7,6 +7,7 @@
    Demonstrate the work of the each case with console utility.
 */
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,8 +34,10 @@ namespace MultiThreading.Task6.Continuation
 
             var task = taskFactory.CreateTaskByOption(taskRunOption, _cts.Token);
 
-            ConfigureTaskContinuations(task);
+            var continuations = GetTaskContinuations(task);
             ProcessTask(task, taskRunOption);
+
+            Task.WaitAny(continuations);
 
             Console.ReadLine();
         }
@@ -55,11 +58,21 @@ namespace MultiThreading.Task6.Continuation
             return (TaskRunOptions)intValue;
         }
 
-        static void ConfigureTaskContinuations(Task task)
+        static Task[] GetTaskContinuations(Task task)
         {
-            TaskContinuationConfigurator.ConfigureAnyContinuation(task);
-            TaskContinuationConfigurator.ConfigureFaultedContinuation(task);
-            TaskContinuationConfigurator.ConfigureCancelledContinuation(task);
+            var result = new List<Task>();
+
+            result.AddRange(
+                TaskContinuationConfigurator.ConfigureAnyContinuation(task)
+            );
+            result.AddRange(
+                TaskContinuationConfigurator.ConfigureFaultedContinuation(task)
+            );
+            result.AddRange(
+                TaskContinuationConfigurator.ConfigureCancelledContinuation(task)
+            );
+
+            return result.ToArray();
         }
 
         static void ProcessTask(Task task, TaskRunOptions taskRunOption)
@@ -69,11 +82,6 @@ namespace MultiThreading.Task6.Continuation
             if (taskRunOption == TaskRunOptions.Cancelled)
             {
                 _cts.Cancel();
-            }
-
-            if (taskRunOption == TaskRunOptions.None)
-            {
-                task.GetAwaiter().GetResult();
             }
         }
     }

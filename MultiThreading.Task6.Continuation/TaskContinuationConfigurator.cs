@@ -1,21 +1,22 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MultiThreading.Task6.Continuation
 {
     public static class TaskContinuationConfigurator
     {
-        public static void ConfigureAnyContinuation(Task task)
+        public static IEnumerable<Task> ConfigureAnyContinuation(Task task)
         {
-            task.ContinueWith(
+            yield return task.ContinueWith(
                 t => Console.WriteLine("Continuation for any result"),
                 TaskContinuationOptions.None
             );
         }
 
-        public static void ConfigureFaultedContinuation(Task task)
+        public static IEnumerable<Task> ConfigureFaultedContinuation(Task task)
         {
-            task.ContinueWith(
+            yield return task.ContinueWith(
                 t =>
                 {
                     Console.WriteLine("Continuation on faulted");
@@ -24,7 +25,7 @@ namespace MultiThreading.Task6.Continuation
                 TaskContinuationOptions.OnlyOnFaulted
             );
 
-            task.ContinueWith(
+            yield return task.ContinueWith(
                 t =>
                 {
                     Console.WriteLine("Continuation on faulted and on the antecedent's thread");
@@ -34,9 +35,9 @@ namespace MultiThreading.Task6.Continuation
             );
         }
 
-        public static void ConfigureCancelledContinuation(Task task)
+        public static IEnumerable<Task> ConfigureCancelledContinuation(Task task)
         {
-            task.ContinueWith(
+            yield return task.ContinueWith(
                 t => Console.WriteLine("Continuation on canceled and outside of the thread pool"),
                 TaskContinuationOptions.OnlyOnCanceled
             );
